@@ -8,10 +8,8 @@ import {
 import * as fs from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { HEADER_LENGTH } from "./constants.js";
 
-// {
-//    [key]: [startIndex, length]
-// }
 const map = {};
 let key = "",
   value = null;
@@ -20,7 +18,7 @@ let readingKey = true;
 function addValue(obj, currentIndex) {
   if (obj == null) return [currentIndex, 1];
   const [startIndex, length] = obj;
-  const updatedLength = currentIndex - startIndex;
+  const updatedLength = currentIndex - startIndex + 1;
   return [startIndex, updatedLength];
 }
 
@@ -30,6 +28,7 @@ function parseKeyValue(input) {
   while (index < str.length) {
     switch (str[index]) {
       case " ": {
+        // Read key until next index is a whitespace
         if (readingKey === true && str[index + 1] === " ") {
           readingKey = false;
         } else {
@@ -68,12 +67,17 @@ async function mergeFiles(filesList, outFile) {
   read1.pipe(write);
 
   const anotherRead = fs.createReadStream("./index.txt");
-  const anotherWrite = fs.createWriteStream("./data.txt", { start: 56 });
+  const anotherWrite = fs.createWriteStream("./data.txt", {
+    start: HEADER_LENGTH,
+    encoding: "utf-8",
+  }); // Start writing from next byte
   anotherRead.pipe(anotherWrite);
 
   const oneMoreRead = fs.createReadStream("./dictionary.txt");
+  console.log("starting write from ", 56 + statSync("index.txt").size + 1);
   const oneMoreWrite = fs.createWriteStream("./data.txt", {
-    start: 56 + statSync("index.txt").size + 1,
+    start: HEADER_LENGTH + statSync("index.txt").size + 1,
+    encoding: "utf-8",
   });
   oneMoreRead.pipe(oneMoreWrite);
 }
@@ -96,9 +100,8 @@ async function main() {
 
   const headerFileHandle = await open("./header.txt", "w");
   const size = statSync("index.txt").size;
-  console.log(statSync("index.txt"));
   headerFileHandle.write(
-    `version: 1.0 \n index_start: 000000 \n index_length: ${size}`
+    "version: 1.0\nindex_start: 000053\nindex_length: " + size
   );
   await headerFileHandle?.close();
 
