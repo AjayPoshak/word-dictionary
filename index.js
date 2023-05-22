@@ -104,7 +104,7 @@ async function readIndexIntoMemory() {
   });
   const command = new GetObjectCommand({
     Bucket: process.env.BUCKET,
-    Key: "data_v2.txt",
+    Key: "data_v3.txt",
     Range: `bytes=0-${HEADER_LENGTH - 1}`,
   });
   const obj = await client.send(command);
@@ -114,12 +114,9 @@ async function readIndexIntoMemory() {
     chunks.push(chunk);
   }
   const header = chunks.join("");
-  // console.log(header);
   INDEX_START = parseInt(parseValueFromString(header, "index_start"), 10);
   INDEX_LENGTH = parseInt(parseValueFromString(header, "index_length"), 10);
-  // console.log({ INDEX_LENGTH });
   wordIndex = await readIndexFromS3(INDEX_START, INDEX_LENGTH);
-  console.log(typeof wordIndex, wordIndex["Abacus"]);
 }
 
 readIndexIntoMemory();
