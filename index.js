@@ -1,13 +1,10 @@
+import * as dotenv from "dotenv";
+dotenv.config({ path: "./.env.dev", debug: true });
+
 import { createServer } from "node:http";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { parseValueFromString } from "./utils.js";
-import {
-  AWS_SECRET_KEY,
-  AWS_ACCESS_KEY,
-  REGION,
-  BUCKET,
-  HEADER_LENGTH,
-} from "./constants.js";
+import { REGION, HEADER_LENGTH } from "./constants.js";
 
 let INDEX_LENGTH = null,
   INDEX_START = null,
@@ -25,8 +22,8 @@ async function readKeyFromData(keyName, dataRange) {
   const client = new S3Client({
     region: REGION,
     credentials: {
-      accessKeyId: AWS_ACCESS_KEY,
-      secretAccessKey: AWS_SECRET_KEY,
+      accessKeyId: process.env.AWS_ACCESS_KEY,
+      secretAccessKey: process.env.AWS_SECRET_KEY,
     },
   });
   const startIndex = HEADER_LENGTH + INDEX_LENGTH + dataStartIndex;
@@ -35,7 +32,7 @@ async function readKeyFromData(keyName, dataRange) {
   console.log(`=========> querying for range ${startIndex} - ${endIndex}`);
 
   const command = new GetObjectCommand({
-    Bucket: BUCKET,
+    Bucket: process.env.BUCKET,
     Key: "data_v3.txt",
     Range: `bytes=${startIndex}-${endIndex}`,
   });
@@ -77,12 +74,12 @@ async function readIndexFromS3(start, length) {
   const client = new S3Client({
     region: REGION,
     credentials: {
-      accessKeyId: AWS_ACCESS_KEY,
-      secretAccessKey: AWS_SECRET_KEY,
+      accessKeyId: process.env.AWS_ACCESS_KEY,
+      secretAccessKey: process.env.AWS_SECRET_KEY,
     },
   });
   const command = new GetObjectCommand({
-    Bucket: BUCKET,
+    Bucket: process.env.BUCKET,
     Key: "data_v3.txt",
     Range: `bytes=${start}-${start + length - 1}`,
   });
@@ -101,12 +98,12 @@ async function readIndexIntoMemory() {
   const client = new S3Client({
     region: REGION,
     credentials: {
-      accessKeyId: AWS_ACCESS_KEY,
-      secretAccessKey: AWS_SECRET_KEY,
+      accessKeyId: process.env.AWS_ACCESS_KEY,
+      secretAccessKey: process.env.AWS_SECRET_KEY,
     },
   });
   const command = new GetObjectCommand({
-    Bucket: BUCKET,
+    Bucket: process.env.BUCKET,
     Key: "data_v2.txt",
     Range: `bytes=0-${HEADER_LENGTH - 1}`,
   });
