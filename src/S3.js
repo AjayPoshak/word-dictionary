@@ -1,7 +1,10 @@
+import * as dotenv from "dotenv";
+dotenv.config({ path: "./.env.dev", debug: !!process.env.PRODUCTION });
+
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { REGION } from "./constants.js";
 
-export class S3 {
+class S3 {
   constructor() {
     this.s3Client = new S3Client({
       region: REGION,
@@ -27,3 +30,5 @@ export class S3 {
     return obj;
   }
 }
+
+export const storageClient = new S3();

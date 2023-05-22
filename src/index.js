@@ -1,17 +1,17 @@
-import * as dotenv from "dotenv";
-dotenv.config({ path: "./.env.dev", debug: true });
-
 import { createServer } from "node:http";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
-import { parseValueFromString } from "./utils.js";
-import { REGION, HEADER_LENGTH } from "./constants.js";
-import { S3 } from "./S3.js";
+import { HEADER_LENGTH } from "./constants.js";
+import { storageClient } from "./S3.js";
+import { bootstrap } from "./bootstrap.js";
 
-const storageClient = new S3();
-
-let INDEX_LENGTH = null,
-  INDEX_START = null,
-  wordIndex = null;
+/**
+ * First read the index from S3 into memory before starting the server
+ */
+const {
+  wordIndex,
+  indexStart: INDEX_START,
+  indexLength: INDEX_LENGTH,
+} = await bootstrap();
 
 function capitalize(str) {
   const tokens = str.split("");
@@ -60,41 +60,6 @@ const server = createServer(async (request, response) => {
   }
 });
 
-server.listen(4000);
-
-async function readIndexFromS3(start, length) {
-  const obj = await storageClient.getPartialFile({
-    bucket: process.env.BUCKET,
-    key: "data_v3.txt",
-    range: { start: start, end: start + length - 1 },
-  });
-  const { Body } = obj;
-  let chunks = [];
-  for await (const chunk of Body) {
-    chunks.push(chunk);
-  }
-  const chunkStr = chunks.join("");
-  const chunkObj = JSON.parse(chunkStr);
-  return chunkObj;
-}
-
-async function readIndexIntoMemory() {
-  const obj = await storageClient.getPartialFile({
-    bucket: process.env.BUCKET,
-    key: "data_v3.txt",
-    range: { start: 0, end: HEADER_LENGTH - 1 },
-  });
-  const { Body } = obj;
-  let chunks = [];
-  for await (const chunk of Body) {
-    chunks.push(chunk);
-  }
-  const header = chunks.join("");
-  console.log("========> ", header);
-  INDEX_START = parseInt(parseValueFromString(header, "index_start"), 10);
-  INDEX_LENGTH = parseInt(parseValueFromString(header, "index_length"), 10);
-  wordIndex = await readIndexFromS3(INDEX_START, INDEX_LENGTH);
-  console.log("Index reading finished");
-}
-
-readIndexIntoMemory();
+server.listen(4000, () => {
+  console.log("server has started listening on 4000");
+});
