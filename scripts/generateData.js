@@ -8,7 +8,7 @@ import {
 import * as fs from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { HEADER_LENGTH } from "./constants.js";
+import { HEADER_LENGTH } from "../src/constants.js";
 
 const map = {};
 let key = "",
