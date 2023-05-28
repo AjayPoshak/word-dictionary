@@ -26,7 +26,7 @@ async function readKeyFromData(keyName, dataRange) {
   const endIndex = startIndex + keyLength + 1;
   const obj = await storageClient.getPartialFile({
     bucket: process.env.BUCKET,
-    key: "data_v3.txt",
+    key: "data_v4.txt",
     range: { start: startIndex, end: endIndex },
   });
   const { Body } = obj;

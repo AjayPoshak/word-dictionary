@@ -6,13 +6,14 @@ import {
   createReadStream,
 } from "node:fs";
 import * as fs from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { HEADER_LENGTH } from "../src/constants.js";
 
 const map = {};
 let key = "",
-  value = null;
+  value = null,
+  bytesCount = 0;
 let readingKey = true;
 
 function addValue(obj, currentIndex) {
@@ -23,25 +24,28 @@ function addValue(obj, currentIndex) {
 }
 
 function parseKeyValue(input) {
-  const str = input.toString().split("");
+  const buffer = Buffer.from(input, "utf8");
   let index = 0;
-  while (index < str.length) {
-    switch (str[index]) {
-      case " ": {
+  while (index < buffer.length) {
+    switch (buffer[index]) {
+      // Whitespace
+      case 32: {
         // Read key until next index is a whitespace
-        if (readingKey === true && str[index + 1] === " ") {
+        if (readingKey === true && buffer[index + 1] === 32) {
           readingKey = false;
         } else {
-          if (readingKey === true) key += str[index];
-          else value = addValue(value, index);
+          if (readingKey === true) key += String.fromCharCode(buffer[index]);
+          else value = addValue(value, bytesCount);
         }
         break;
       }
-      case "\n": {
+      // Newline character
+      case 10: {
         // If we're reading value and encounter a newline then the value is complete.
         if (readingKey === false) {
           // Conclude our reading of key-value pair
-          map[key] = value;
+          const [startIndex, length] = value;
+          map[key] = [startIndex, length];
           key = "";
           value = null;
           // Start reading new key
@@ -53,37 +57,41 @@ function parseKeyValue(input) {
         break;
       }
       default: {
-        if (readingKey === true) key += str[index];
-        else value = addValue(value, index);
+        if (readingKey === true) key += String.fromCharCode(buffer[index]);
+        else value = addValue(value, bytesCount);
       }
     }
     index++;
+    bytesCount++;
   }
 }
 
 async function mergeFiles(filesList, outFile) {
-  const read1 = fs.createReadStream("./header.txt");
-  const write = fs.createWriteStream("./data.txt");
+  const read1 = fs.createReadStream("./src/data/header.txt");
+  const write = fs.createWriteStream("./src/data/data.txt");
   read1.pipe(write);
 
-  const anotherRead = fs.createReadStream("./index.txt");
-  const anotherWrite = fs.createWriteStream("./data.txt", {
+  const anotherRead = fs.createReadStream("./src/data/index.txt");
+  const anotherWrite = fs.createWriteStream("./src/data/data.txt", {
     start: HEADER_LENGTH,
     encoding: "utf-8",
   }); // Start writing from next byte
   anotherRead.pipe(anotherWrite);
 
-  const oneMoreRead = fs.createReadStream("./dictionary.txt");
-  console.log("starting write from ", 56 + statSync("index.txt").size + 1);
-  const oneMoreWrite = fs.createWriteStream("./data.txt", {
-    start: HEADER_LENGTH + statSync("index.txt").size + 1,
+  const oneMoreRead = fs.createReadStream("./src/data/dictionary.txt");
+  console.log(
+    "starting write from ",
+    56 + statSync("./src/data/index.txt").size + 1
+  );
+  const oneMoreWrite = fs.createWriteStream("./src/data/data.txt", {
+    start: HEADER_LENGTH + statSync("./src/data/index.txt").size + 1,
     encoding: "utf-8",
   });
   oneMoreRead.pipe(oneMoreWrite);
 }
 
 async function main() {
-  const fileHandle = await open("./dictionary.txt");
+  const fileHandle = await open(resolve("./src/data/dictionary.txt"));
   const stream = fileHandle.createReadStream({ highWaterMark: 64 * 2048 });
   for await (const chunk of stream) {
     parseKeyValue(chunk);
@@ -94,18 +102,21 @@ async function main() {
   }
   await fileHandle?.close();
 
-  const indexHandle = await open("./index.txt", "w");
+  const indexHandle = await open(resolve("./src/data/index.txt"), "w");
   indexHandle.write(JSON.stringify(map));
   await indexHandle?.close();
 
-  const headerFileHandle = await open("./header.txt", "w");
-  const size = statSync("index.txt").size;
+  const headerFileHandle = await open(resolve("./src/data/header.txt"), "w");
+  const size = statSync("./src/data/index.txt").size;
   headerFileHandle.write(
     "version: 1.0\nindex_start: 000053\nindex_length: " + size
   );
   await headerFileHandle?.close();
 
-  await mergeFiles(["./index.txt", "./header.txt"], "data.txt");
+  await mergeFiles(
+    ["./src/data/index.txt", "./src/data/header.txt"],
+    "data.txt"
+  );
 }
 
 main();

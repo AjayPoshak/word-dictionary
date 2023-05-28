@@ -11,7 +11,7 @@ import { parseValueFromString } from "./utils.js";
 async function readIndexFromS3(start, length) {
   const obj = await storageClient.getPartialFile({
     bucket: process.env.BUCKET,
-    key: "data_v3.txt",
+    key: "data_v4.txt",
     range: { start: start, end: start + length - 1 },
   });
   const { Body } = obj;
@@ -27,7 +27,7 @@ async function readIndexFromS3(start, length) {
 async function readIndexIntoMemory() {
   const obj = await storageClient.getPartialFile({
     bucket: process.env.BUCKET,
-    key: "data_v3.txt",
+    key: "data_v4.txt",
     range: { start: 0, end: HEADER_LENGTH - 1 },
   });
   const { Body } = obj;
