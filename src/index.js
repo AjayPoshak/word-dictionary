@@ -1,7 +1,7 @@
 import { createServer } from "node:http";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { HEADER_LENGTH } from "./constants.js";
-import { storageClient } from "./S3.js";
+import { storageClient } from "./utils/S3.js";
 import { bootstrap } from "./bootstrap.js";
 
 /**

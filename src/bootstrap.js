@@ -4,9 +4,9 @@
 import * as dotenv from "dotenv";
 dotenv.config({ path: "./.env.dev", debug: !!process.env.PRODUCTION });
 
-import { storageClient } from "./S3.js";
+import { storageClient } from "./utils/S3.js";
 import { HEADER_LENGTH } from "./constants.js";
-import { parseValueFromString } from "./utils.js";
+import { parseValueFromString } from "./utils/utils.js";
 
 async function readIndexFromS3(start, length) {
   const obj = await storageClient.getPartialFile({
