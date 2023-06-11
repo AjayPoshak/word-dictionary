@@ -56,12 +56,14 @@ async function mergeLines(originalFileReader, changedFileReader, destination) {
     const key1 = getKey(line1);
     const key2 = getKey(line2);
     console.log({ key1, key2 });
-    if (key1 === key2) {
+    const comparison = key1.localeCompare(key2);
+    if (comparison === 0) {
       // If both keys are same then the updated data overwrites the existing data
       await destination.write(line2);
       line2 = await changedFileReader.readLine();
       line1 = await originalFileReader.readLine();
-    } else if (key1 < key2) {
+    } else if (comparison === -1) {
+      // `key1` is smaller than `key2`
       await destination.write(line1);
       line1 = await originalFileReader.readLine();
     } else {
@@ -81,9 +83,7 @@ async function mergeLines(originalFileReader, changedFileReader, destination) {
 }
 
 async function main() {
-  const originalFileReader = new LineReader(
-    "./src/data/original_dictionary.txt"
-  );
+  const originalFileReader = new LineReader("./src/data/dictionary.txt");
   const changedFileReader = new LineReader("./src/data/update_dictionary.txt");
   const destination = new FileWriter("./src/data/new_dictionary.txt");
   await mergeLines(originalFileReader, changedFileReader, destination);
