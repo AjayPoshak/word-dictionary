@@ -9,12 +9,11 @@ export class FileWriter {
 
   async openFile() {
     if (this.fileHandle) return this.fileHandle;
-    this.fileHandle = await open(resolve(this.filePath), "a");
+    this.fileHandle = await open(resolve(this.filePath), "w");
     return this.fileHandle;
   }
 
   async write(line) {
-    console.log(line);
     await this.openFile();
     await this.fileHandle.write(line + "\n");
   }
