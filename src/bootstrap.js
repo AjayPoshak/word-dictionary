@@ -4,14 +4,14 @@
 import * as dotenv from "dotenv";
 dotenv.config({ path: "./.env.dev", debug: !!process.env.PRODUCTION });
 
-import { storageClient } from "./S3.js";
+import { storageClient } from "./utils/S3.js";
 import { HEADER_LENGTH } from "./constants.js";
-import { parseValueFromString } from "./utils.js";
+import { parseValueFromString } from "./utils/utils.js";
 
 async function readIndexFromS3(start, length) {
   const obj = await storageClient.getPartialFile({
     bucket: process.env.BUCKET,
-    key: "data_v4.txt",
+    key: "after_update_data_v2.txt",
     range: { start: start, end: start + length - 1 },
   });
   const { Body } = obj;
@@ -27,7 +27,7 @@ async function readIndexFromS3(start, length) {
 async function readIndexIntoMemory() {
   const obj = await storageClient.getPartialFile({
     bucket: process.env.BUCKET,
-    key: "data_v4.txt",
+    key: "after_update_data_v2.txt",
     range: { start: 0, end: HEADER_LENGTH - 1 },
   });
   const { Body } = obj;

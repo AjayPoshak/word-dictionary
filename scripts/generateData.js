@@ -68,30 +68,36 @@ function parseKeyValue(input) {
 
 async function mergeFiles(filesList, outFile) {
   const read1 = fs.createReadStream("./src/data/header.txt");
-  const write = fs.createWriteStream("./src/data/data.txt");
+  const write = fs.createWriteStream("./src/data/after_update_data.txt");
   read1.pipe(write);
 
   const anotherRead = fs.createReadStream("./src/data/index.txt");
-  const anotherWrite = fs.createWriteStream("./src/data/data.txt", {
-    start: HEADER_LENGTH,
-    encoding: "utf-8",
-  }); // Start writing from next byte
+  const anotherWrite = fs.createWriteStream(
+    "./src/data/after_update_data.txt",
+    {
+      start: HEADER_LENGTH,
+      encoding: "utf-8",
+    }
+  ); // Start writing from next byte
   anotherRead.pipe(anotherWrite);
 
-  const oneMoreRead = fs.createReadStream("./src/data/dictionary.txt");
+  const oneMoreRead = fs.createReadStream("./src/data/new_dictionary.txt");
   console.log(
     "starting write from ",
     56 + statSync("./src/data/index.txt").size + 1
   );
-  const oneMoreWrite = fs.createWriteStream("./src/data/data.txt", {
-    start: HEADER_LENGTH + statSync("./src/data/index.txt").size + 1,
-    encoding: "utf-8",
-  });
+  const oneMoreWrite = fs.createWriteStream(
+    "./src/data/after_update_data.txt",
+    {
+      start: HEADER_LENGTH + statSync("./src/data/index.txt").size + 1,
+      encoding: "utf-8",
+    }
+  );
   oneMoreRead.pipe(oneMoreWrite);
 }
 
 async function main() {
-  const fileHandle = await open(resolve("./src/data/dictionary.txt"));
+  const fileHandle = await open(resolve("./src/data/new_dictionary.txt"));
   const stream = fileHandle.createReadStream({ highWaterMark: 64 * 2048 });
   for await (const chunk of stream) {
     parseKeyValue(chunk);
