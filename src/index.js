@@ -26,7 +26,7 @@ async function readKeyFromData(keyName, dataRange) {
   const endIndex = startIndex + keyLength + 1;
   const obj = await storageClient.getPartialFile({
     bucket: process.env.BUCKET,
-    key: "data_v4.txt",
+    key: "after_update_data_v2.txt",
     range: { start: startIndex, end: endIndex },
   });
   const { Body } = obj;
@@ -47,6 +47,7 @@ const server = createServer(async (request, response) => {
     // GET => /keys/{keyName}
     if (path === "keys") {
       const keyName = capitalize(key);
+      console.log("======> ", { keyName });
       if (wordIndex[keyName] !== undefined) {
         console.log(wordIndex[keyName]);
         const value = await readKeyFromData(keyName, wordIndex[keyName]);
