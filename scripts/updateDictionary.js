@@ -62,20 +62,20 @@ async function mergeLines(originalFileReader, changedFileReader, destination) {
       line2 = await changedFileReader.readLine();
       line1 = await originalFileReader.readLine();
     } else if (key1 < key2) {
-      destination.write(line1);
+      await destination.write(line1);
       line1 = await originalFileReader.readLine();
     } else {
-      destination.write(line2);
+      await destination.write(line2);
       line2 = await changedFileReader.readLine();
     }
   }
   while (line1) {
-    destination.write(line1);
+    await destination.write(line1);
     line1 = await originalFileReader.readLine();
   }
 
   while (line2) {
-    destination.write(line2);
+    await destination.write(line2);
     line2 = await changedFileReader.readLine();
   }
 }
