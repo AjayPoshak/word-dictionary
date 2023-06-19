@@ -43,7 +43,6 @@ function getKey(str) {
     const splitStr = str.split(" ");
     return splitStr[0];
   } catch (err) {
-    console.log("==========> ", str);
     console.log(err);
     return null;
   }
