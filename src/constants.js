@@ -1,4 +1,3 @@
 export const REGION = "us-east-1";
-export const KEY = "corey_mug.jpg";
-export const CDN_URL = "d2vwczl1ot5z0n.cloudfront.net";
 export const HEADER_LENGTH = 53;
+export const S3_FILE_NAME = "after_update_data_v2.txt";
