@@ -5,13 +5,13 @@ import * as dotenv from "dotenv";
 dotenv.config({ path: "./.env.dev", debug: !!process.env.PRODUCTION });
 
 import { storageClient } from "./utils/S3.js";
-import { HEADER_LENGTH } from "./constants.js";
+import { HEADER_LENGTH, S3_FILE_NAME } from "./constants.js";
 import { parseValueFromString } from "./utils/utils.js";
 
 async function readIndexFromS3(start, length) {
   const obj = await storageClient.getPartialFile({
     bucket: process.env.BUCKET,
-    key: "after_update_data_v2.txt",
+    key: S3_FILE_NAME,
     range: { start: start, end: start + length - 1 },
   });
   const { Body } = obj;
@@ -27,7 +27,7 @@ async function readIndexFromS3(start, length) {
 async function readIndexIntoMemory() {
   const obj = await storageClient.getPartialFile({
     bucket: process.env.BUCKET,
-    key: "after_update_data_v2.txt",
+    key: S3_FILE_NAME,
     range: { start: 0, end: HEADER_LENGTH - 1 },
   });
   const { Body } = obj;

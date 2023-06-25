@@ -66,7 +66,7 @@ Once we have generated updated dictionary, then run it through the same process 
 
 ### Steps to run server
 1. Download dictionary data into `dictionary.txt`
-2. Run `scripts/generateData.js` which will generate `header.txt`, `index.txt` and `data.txt`
+2. Run `node scripts/generateData.js --source=dictionary.txt --dest=data.txt` which will generate `header.txt`, `index.txt` and `data.txt`
 3. Upload `data.txt` to S3 in a bucket. `header.txt` and `index.txt` is just for debugging purposes.
 4. Then install the deps `yarn install`
 5. Start the server `yarn start`
@@ -75,7 +75,7 @@ Once we have generated updated dictionary, then run it through the same process 
 ### Steps to merge new data
 1. Assume we got updated dictionary data in `update_dictionary.txt`. Some fields are added, some are modified.
 2. Run `scripts/updateDictionary.txt`, it will generate `new_dictionary.txt`.
-3. Then follow `Steps to run server`, but replace the usage of `dictionary.txt` with `update_dictionary.txt`
+3. Then follow `Steps to run server`, but replace the usage of `dictionary.txt` with `update_dictionary.txt` (`node scripts/generateData.js --source=update_dictionary.txt --dest=after_update_data_v2.txt`)
 
 
 @TODO: Add bloom filters even before the index search.  It won't impact the system's performance but will be a good learning.

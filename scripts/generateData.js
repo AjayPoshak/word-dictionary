@@ -9,6 +9,7 @@ import * as fs from "node:fs";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { HEADER_LENGTH } from "../src/constants.js";
+import { parseArgs } from "node:util";
 
 const map = {};
 let key = "",
@@ -66,38 +67,48 @@ function parseKeyValue(input) {
   }
 }
 
-async function mergeFiles(filesList, outFile) {
-  const read1 = fs.createReadStream("./src/data/header.txt");
-  const write = fs.createWriteStream("./src/data/after_update_data.txt");
+async function mergeFiles({
+  headerFilePath,
+  indexFilePath,
+  sourceFilePath,
+  destinationFilePath,
+}) {
+  const read1 = fs.createReadStream(headerFilePath);
+  const write = fs.createWriteStream(destinationFilePath);
   read1.pipe(write);
 
-  const anotherRead = fs.createReadStream("./src/data/index.txt");
-  const anotherWrite = fs.createWriteStream(
-    "./src/data/after_update_data.txt",
-    {
-      start: HEADER_LENGTH,
-      encoding: "utf-8",
-    }
-  ); // Start writing from next byte
+  const anotherRead = fs.createReadStream(indexFilePath);
+  const anotherWrite = fs.createWriteStream(destinationFilePath, {
+    start: HEADER_LENGTH,
+    encoding: "utf-8",
+  }); // Start writing from next byte
   anotherRead.pipe(anotherWrite);
 
-  const oneMoreRead = fs.createReadStream("./src/data/new_dictionary.txt");
-  console.log(
-    "starting write from ",
-    56 + statSync("./src/data/index.txt").size + 1
-  );
-  const oneMoreWrite = fs.createWriteStream(
-    "./src/data/after_update_data.txt",
-    {
-      start: HEADER_LENGTH + statSync("./src/data/index.txt").size + 1,
-      encoding: "utf-8",
-    }
-  );
+  const oneMoreRead = fs.createReadStream(sourceFilePath);
+  console.log("starting write from ", 56 + statSync(indexFilePath).size + 1);
+  const oneMoreWrite = fs.createWriteStream(destinationFilePath, {
+    start: HEADER_LENGTH + statSync(indexFilePath).size + 1,
+    encoding: "utf-8",
+  });
   oneMoreRead.pipe(oneMoreWrite);
 }
 
+function parseCommandValues() {
+  const options = {
+    source: {
+      type: "string",
+    },
+    dest: {
+      type: "string",
+    },
+  };
+  const { values } = parseArgs({ options });
+  return { sourceFile: values.source, destFile: values.dest };
+}
+
 async function main() {
-  const fileHandle = await open(resolve("./src/data/new_dictionary.txt"));
+  const { sourceFile, destFile } = parseCommandValues();
+  const fileHandle = await open(resolve(`./src/data/${sourceFile}`));
   const stream = fileHandle.createReadStream({ highWaterMark: 64 * 2048 });
   for await (const chunk of stream) {
     parseKeyValue(chunk);
@@ -119,10 +130,12 @@ async function main() {
   );
   await headerFileHandle?.close();
 
-  await mergeFiles(
-    ["./src/data/index.txt", "./src/data/header.txt"],
-    "data.txt"
-  );
+  await mergeFiles({
+    headerFilePath: "./src/data/header.txt",
+    indexFilePath: "./src/data/index.txt",
+    sourceFilePath: `./src/data/${sourceFile}`,
+    destinationFilePath: `./src/data/${destFile}`,
+  });
 }
 
 main();

@@ -1,18 +1,15 @@
 /**
  * This file deals with update to the original dictionary.
- * It expects the modifications/additions in a text file, where key and value are separated by space, values end with newline.
+ * It expects the modifications/additions in a text file, where key and value are separated by two spaces, values end with newline.
  *
  * Output is a new dictionary.txt where the updated is applied on the original dictionary.
  */
 import { resolve } from "node:path";
+import { parseArgs } from "node:util";
 import { createReadStream } from "node:fs";
 import { open } from "node:fs/promises";
-import { LineReader } from "./LineReader.js";
-import { FileWriter } from "./FileWriter.js";
-
-const MODIFICATIONS_FILE_NAME = "update_dictionary.txt";
-const ORIGINAL_FILE_NAME = "dictionary.txt";
-const OUTPUT_FILE_NAME = "new_dictionary.txt";
+import { LineReader } from "../src/utils/LineReader.js";
+import { FileWriter } from "../src/utils/FileWriter.js";
 
 function merge(listA, listB) {
   const mergedList = [];
@@ -81,10 +78,32 @@ async function mergeLines(originalFileReader, changedFileReader, destination) {
   }
 }
 
+function parseCommandValues() {
+  const options = {
+    source: {
+      type: "string",
+    },
+    modified: {
+      type: "string",
+    },
+    dest: {
+      type: "string",
+    },
+  };
+  const { values } = parseArgs({ options });
+  return {
+    originalFilePath: values.source,
+    modifiedFilePath: values.modified,
+    destinationFilePath: values.dest,
+  };
+}
+
 async function main() {
-  const originalFileReader = new LineReader("./src/data/dictionary.txt");
-  const changedFileReader = new LineReader("./src/data/update_dictionary.txt");
-  const destination = new FileWriter("./src/data/new_dictionary.txt");
+  const { originalFilePath, modifiedFilePath, destinationFilePath } =
+    parseCommandValues();
+  const originalFileReader = new LineReader(`./src/data/${originalFilePath}`);
+  const changedFileReader = new LineReader(`./src/data/${modifiedFilePath}`);
+  const destination = new FileWriter(`./src/data/${destinationFilePath}`);
   await mergeLines(originalFileReader, changedFileReader, destination);
   originalFileReader.close();
   changedFileReader.close();
